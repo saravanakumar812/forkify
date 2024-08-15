@@ -1,0 +1,129 @@
+"use strict";
+
+require("core-js/modules/web.immediate.js");
+var model = _interopRequireWildcard(require("./model.js"));
+var _recipeView = _interopRequireDefault(require("./views/recipeView.js"));
+var _searchView = _interopRequireDefault(require("./views/searchView.js"));
+var _resultsView = _interopRequireDefault(require("./views/resultsView.js"));
+var _paginationView = _interopRequireDefault(require("./views/paginationView.js"));
+var _bookMarksView = _interopRequireDefault(require("./views/bookMarksView.js"));
+var _addRecipeView = _interopRequireDefault(require("./views/addRecipeView.js"));
+var _config = require("./config.js");
+function _interopRequireDefault(e) { return e && e.__esModule ? e : { default: e }; }
+function _getRequireWildcardCache(e) { if ("function" != typeof WeakMap) return null; var r = new WeakMap(), t = new WeakMap(); return (_getRequireWildcardCache = function (e) { return e ? t : r; })(e); }
+function _interopRequireWildcard(e, r) { if (!r && e && e.__esModule) return e; if (null === e || "object" != typeof e && "function" != typeof e) return { default: e }; var t = _getRequireWildcardCache(r); if (t && t.has(e)) return t.get(e); var n = { __proto__: null }, a = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var u in e) if ("default" !== u && {}.hasOwnProperty.call(e, u)) { var i = a ? Object.getOwnPropertyDescriptor(e, u) : null; i && (i.get || i.set) ? Object.defineProperty(n, u, i) : n[u] = e[u]; } return n.default = e, t && t.set(e, n), n; }
+// ICONS
+
+// console.log(icons);
+
+// const recipeContainer = document.querySelector('.recipe');
+
+const controllerRecipe = async function () {
+  // LOADING APIS
+  try {
+    const id = window.location.hash.slice(1);
+    // console.log(id);
+
+    if (!id) return;
+
+    // LOADING IMAGE
+    _recipeView.default.renderSpinner();
+    _resultsView.default.update(model.getResultPerPage());
+
+    // LOADING RECIPE
+    await model.loadingRender(id);
+    // RENDERING RECIPE
+
+    _recipeView.default.render(model.state.recipe);
+    _bookMarksView.default.update(model.state.bookmarks);
+  } catch (err) {
+    _recipeView.default.renderError();
+    console.error(err);
+  }
+};
+const controlResults = async function () {
+  try {
+    _resultsView.default.renderSpinner();
+    // SEARCH RESULTS
+    const query = _searchView.default.getResult();
+    // console.log(query);
+
+    if (!query) return _resultsView.default.renderError();
+    // LOADING RESULTS
+    await model.loadSearchResults(query);
+
+    // console.log(model.state.search.results);
+
+    _resultsView.default.render(model.getResultPerPage());
+    // PAGINATION ON THE PER PAGE
+
+    _paginationView.default.render(model.state.search);
+
+    // console.log();
+  } catch (err) {
+    console.log(err);
+  }
+};
+const paginationControl = async function (goToPage) {
+  try {
+    _resultsView.default.render(model.getResultPerPage(goToPage));
+    // PAGINATION ON THE PER PAGE
+    _paginationView.default.render(model.state.search);
+  } catch (error) {}
+};
+const controlServings = async function (newServings) {
+  model.updateServings(newServings);
+
+  // Update the recipe view
+  _recipeView.default.update(model.state.recipe);
+};
+const controlAddBookMark = async function () {
+  if (!model.state.recipe.bookmarked) model.addBookMarks(model.state.recipe);else model.deleteBookMarks(model.state.recipe.id);
+  console.log(model.state.recipe);
+  _bookMarksView.default.render(model.state.bookmarks);
+  _recipeView.default.update(model.state.recipe);
+};
+// paginationControl();
+const controlBookMarks = function () {
+  _bookMarksView.default.render(model.state.bookmarks);
+};
+const controlAddRecipe = async function (newRecipe) {
+  try {
+    // render spinner
+    _addRecipeView.default.renderSpinner();
+    // upload recipe
+    await model.uploadRecipe(newRecipe);
+    // update recipe
+    _recipeView.default.render(model.state.recipe);
+    // success message
+
+    _addRecipeView.default.renderMessage();
+
+    // add book mark
+    _bookMarksView.default.render(model.state.bookmarks);
+
+    //update id
+    window.history.pushState(null, ' ', `#${model.state.recipe.id}`);
+
+    // timeout
+    setTimeout(() => {
+      _addRecipeView.default.toggleButton();
+    }, _config.MODAL_UPLOAD_CLOSE_SEC * 1000);
+    console.log(model.state.recipe);
+  } catch (err) {
+    console.error(err);
+    _addRecipeView.default.renderError(err.message);
+  }
+
+  // console.log(newRecipe);
+};
+const init = function () {
+  _bookMarksView.default.addHandlerBookMarks(controlBookMarks);
+  _recipeView.default.addHandlerRender(controllerRecipe);
+  _recipeView.default.addHandlerClick(controlServings);
+  _recipeView.default.addHandlerBookMark(controlAddBookMark);
+  _searchView.default.addHandlerSearchResults(controlResults);
+  _paginationView.default.addHandlerClick(paginationControl);
+  _addRecipeView.default.addNewRecipe(controlAddRecipe);
+};
+init();

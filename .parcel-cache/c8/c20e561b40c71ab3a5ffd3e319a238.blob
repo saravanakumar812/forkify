@@ -1,0 +1,21 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+var _icons = _interopRequireDefault(require("url:../../img/icons.svg"));
+var _View = _interopRequireDefault(require("./View.js"));
+var _previewView = _interopRequireDefault(require("./previewView.js"));
+function _interopRequireDefault(e) { return e && e.__esModule ? e : { default: e }; }
+class BookmarksView extends _View.default {
+  _parentElement = document.querySelector('.bookmarks__list');
+  _errorMessage = 'BookMark not yet, No data Found!';
+  addHandlerBookMarks(handler) {
+    window.addEventListener('load', handler);
+  }
+  _generatedMarkUp() {
+    return this._data.map(bookmark => _previewView.default.render(bookmark, false)).join('');
+  }
+}
+var _default = exports.default = new BookmarksView();
