@@ -17,7 +17,7 @@ const controllerRecipe = async function () {
   // LOADING APIS
   try {
     const id = window.location.hash.slice(1);
-    // console.log(id);
+    console.log(id);
 
     if (!id) return;
 
